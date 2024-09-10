@@ -1,5 +1,4 @@
-const { Events } = require('discord.js');
-const { cooldowns } = interaction.client;
+const { Collection, Events } = require('discord.js');
 
 // Recieve commands (Slash Only)
 
@@ -10,14 +9,20 @@ module.exports = {
 
 		const command = interaction.client.commands.get(interaction.commandName);
 
+		if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+		}
+
 		// Initailize the cooldown
+		const { cooldowns } = interaction.client;
 		if (!cooldowns.has(command.data.name)) {
 			cooldowns.set(command.data.name, new Collection());
 		}
 
 		const defaultCooldownDuration = 3;
 		const now = Date.now();
-		const timestamps = cooldowns.get(command.date.name);
+		const timestamps = cooldowns.get(command.data.name);
 		const cooldownAmount = (command.cooldown ?? defaultCooldownDuration) * 1_000;
 
 		if (timestamps.has(interaction.user.id)) {
@@ -33,10 +38,7 @@ module.exports = {
 		setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 		
 
-		if (!command) {
-			console.error(`No command matching ${interaction.commandName} was found.`);
-			return;
-		}
+
 
 		try {
 			await command.execute(interaction);
