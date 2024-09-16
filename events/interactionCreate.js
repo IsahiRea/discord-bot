@@ -68,5 +68,36 @@ module.exports = {
 				console.error(error);
 			}
 		}
+		else if (interaction.isButton()) {
+			const command = interaction.client.commands.get(interaction.commandName);
+
+			if(!command) {
+				console.error(`No command matching ${interaction.commandName} was found.`);
+				return;
+			}
+
+			try {
+				await command.execute(interaction);
+			} catch (error) {
+				console.error(error);
+			}
+		} 
+		else if (interaction.isStringSelectMenu()) {
+			const command = interaction.client.commands.get(interaction.commandName);
+
+			if(!command) {
+				console.error(`No command matching ${interaction.commandName} was found.`);
+				return;
+			}
+
+			try {
+				await command.execute(interaction);
+			} catch (error) {
+				console.error(error);
+			}
+		}
+
+
+
 	},
 };
