@@ -11,6 +11,7 @@ This bot is currently a **Work In Progress**. As of now, it doesn't have any sig
 - No major features have been added yet.
 - Basic bot structure is in place.
 - More features and improvements are planned for future updates.
+- Sample Backend
 
 ---
 
