@@ -5,6 +5,7 @@ require('./config/passportConfig');
 const apiRoutes = require('./routes/api');
 const connectDB = require('./config/connectDB');
 const MongoStore = require('connect-mongo');
+const { expiration } = require('./middleware/expiration');
 require('dotenv').config()
 
 const app = express();
@@ -25,9 +26,14 @@ app.use(session({
     collectionName: 'sessions'         // Name of the collection where sessions will be stored
   }),
   cookie: {
+    httpOnly: true,                      // Prevents JavaScript access to cookies
+    secure: process.env.NODE_ENV === 'production',  // Send cookies only over HTTPS in production
+    sameSite: 'lax',  
     maxAge: 1000 * 60 * 60 * 24 * 7,   // 1-week session expiration
   }
 }));
+
+app.use(expiration);
 
 
 // Passport setup
