@@ -14,7 +14,8 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB          *database.Queries
+	TokenSecret string
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +29,10 @@ func main() {
 	portString := os.Getenv("PORT")
 	if portString == "" {
 		log.Fatal("PORT is not found in the environment")
+	}
+	tokenSecret := os.Getenv("JWT_SECRET")
+	if portString == "" {
+		log.Fatal("JWT_SECRET is not found in the environment")
 	}
 
 	dbURL := os.Getenv("DB_URL")
@@ -43,7 +48,8 @@ func main() {
 	queries := database.New(conn)
 
 	apiCfg := apiConfig{
-		DB: queries,
+		DB:          queries,
+		TokenSecret: tokenSecret,
 	}
 
 	mux := http.NewServeMux() // Create a new multiplexer
@@ -51,7 +57,7 @@ func main() {
 	mux.HandleFunc("GET /v1/api/healthz", handlerReadiness)
 	mux.HandleFunc("GET /v1/api/error", handlerErr)
 
-	mux.HandleFunc("GET /v1/api/users/{discordID}", apiCfg.handlerGetUser)
+	mux.Handle("GET /v1/api/users/{discordID}", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
 	mux.HandleFunc("POST /v1/api/users", apiCfg.handlerCreateUser)
 
 	server := &http.Server{

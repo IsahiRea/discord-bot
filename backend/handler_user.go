@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"github.com/IsahiRea/discord-bot/backend/internal/database"
 )
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +29,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 	respondWithJSON(w, 201, struct{}{})
 }
 
-func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request, user database.User) {
 	discordIDSTR := r.PathValue("discordID")
 
 	id, err := strconv.ParseInt(discordIDSTR, 10, 64)
@@ -36,9 +38,8 @@ func (cfg *apiConfig) handlerGetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := cfg.DB.GetUser(r.Context(), id)
-	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("Couldn't find user: %v", err))
+	if id != user.DiscordUserID {
+		respondWithError(w, 401, fmt.Sprintf("Unauthorized access: %v", err))
 		return
 	}
 
