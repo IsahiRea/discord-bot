@@ -11,9 +11,8 @@ import (
 )
 
 type User struct {
-	ID             uuid.UUID
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
-	Email          string
-	HashedPassword string
+	ID            uuid.UUID
+	DiscordUserID int64
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
 }

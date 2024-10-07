@@ -1,10 +1,11 @@
--- name: CreateUser :one
-INSERT INTO users (id, created_at, updated_at, email, hashed_password)
+-- name: CreateUser :exec
+INSERT INTO users (id, discord_user_id, created_at, updated_at)
 VALUES (
     gen_random_uuid(),  -- Generates a new UUID
+    $1,
     NOW(),              -- Sets created_at to the current timestamp
-    NOW(),              -- Sets updated_at to the current timestamp
-    $1,                 -- The email, passed in by the application
-    $2                  -- The hashedpassword, passed in by the application
-)
-RETURNING *;
+    NOW()              -- Sets updated_at to the current timestamp                  
+);
+
+-- name: GetUser :one
+SELECT * FROM users where discord_user_id=$1;

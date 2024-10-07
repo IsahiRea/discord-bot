@@ -9,32 +9,33 @@ import (
 	"context"
 )
 
-const createUser = `-- name: CreateUser :one
-INSERT INTO users (id, created_at, updated_at, email, hashed_password)
+const createUser = `-- name: CreateUser :exec
+INSERT INTO users (id, discord_user_id, created_at, updated_at)
 VALUES (
     gen_random_uuid(),  -- Generates a new UUID
+    $1,
     NOW(),              -- Sets created_at to the current timestamp
-    NOW(),              -- Sets updated_at to the current timestamp
-    $1,                 -- The email, passed in by the application
-    $2                  -- The hashedpassword, passed in by the application
+    NOW()              -- Sets updated_at to the current timestamp                  
 )
-RETURNING id, created_at, updated_at, email, hashed_password
 `
 
-type CreateUserParams struct {
-	Email          string
-	HashedPassword string
+func (q *Queries) CreateUser(ctx context.Context, discordUserID int64) error {
+	_, err := q.db.ExecContext(ctx, createUser, discordUserID)
+	return err
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, createUser, arg.Email, arg.HashedPassword)
+const getUser = `-- name: GetUser :one
+SELECT id, discord_user_id, created_at, updated_at FROM users where discord_user_id=$1
+`
+
+func (q *Queries) GetUser(ctx context.Context, discordUserID int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, discordUserID)
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.DiscordUserID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Email,
-		&i.HashedPassword,
 	)
 	return i, err
 }

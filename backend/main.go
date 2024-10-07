@@ -50,6 +50,8 @@ func main() {
 	mux.HandleFunc("/", homeHandler)
 	mux.HandleFunc("GET /v1/api/healthz", handlerReadiness)
 	mux.HandleFunc("GET /v1/api/error", handlerErr)
+
+	mux.HandleFunc("GET /v1/api/users/{discordID}", apiCfg.handlerGetUser)
 	mux.HandleFunc("POST /v1/api/users", apiCfg.handlerCreateUser)
 
 	server := &http.Server{
