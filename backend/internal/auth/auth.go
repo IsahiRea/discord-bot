@@ -13,7 +13,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// TODO Create JWT Authorization package
 func GetBearerToken(headers http.Header) (string, error) {
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {
@@ -31,21 +30,26 @@ func GetBearerToken(headers http.Header) (string, error) {
 	return tokenParts[1], nil
 }
 
-func MakeJWT(userID int64, tokenSecret string, expiresIn time.Duration) (string, error) {
+func MakeJWT(userID int64, tokenSecret string) (string, error) {
 
 	mySigningKey := []byte(tokenSecret)
+
+	timeDurationJWT, err := time.ParseDuration("1h")
+	if err != nil {
+		return "", err
+	}
 
 	claims := &jwt.RegisteredClaims{
 		Issuer:    "chirpy",
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(expiresIn)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(timeDurationJWT)),
 		Subject:   strconv.FormatInt(userID, 10),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	ss, err := token.SignedString(mySigningKey)
 	if err != nil {
-		return "nil", err
+		return "", err
 	}
 
 	return ss, nil

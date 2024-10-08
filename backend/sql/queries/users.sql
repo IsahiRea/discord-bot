@@ -9,3 +9,6 @@ VALUES (
 
 -- name: GetUser :one
 SELECT * FROM users where discord_user_id=$1;
+
+-- name: GetUserByID :one
+SELECT * FROM users where id=$1;
