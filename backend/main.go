@@ -25,7 +25,10 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
 	portString := os.Getenv("PORT")
 	if portString == "" {
@@ -64,17 +67,31 @@ func main() {
 
 	// Default handlers
 	mux.HandleFunc("/", homeHandler)
-	mux.HandleFunc("GET /v1/api/healthz", handlerReadiness)
-	mux.HandleFunc("GET /v1/api/error", handlerErr)
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /api/error", handlerErr)
 
 	// Auth Handlers
-	mux.HandleFunc("POST /v1/api/login", apiCfg.HandlerLogin)
-	mux.HandleFunc("GET /v1/api/refresh", apiCfg.HandlerRefresh)
-	mux.HandleFunc("GET /v1/api/revoke", apiCfg.HandlerRevoke)
+	mux.HandleFunc("POST /api/login", apiCfg.HandlerLogin)
+	mux.HandleFunc("GET /api/refresh", apiCfg.HandlerRefresh)
+	mux.HandleFunc("GET /api/revoke", apiCfg.HandlerRevoke)
 
 	// User Handlers
-	mux.Handle("GET /v1/api/users/{discordID}", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
-	mux.HandleFunc("POST /v1/api/users", apiCfg.handlerCreateUser)
+	mux.HandleFunc("GET /api/users/{discordID}", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
+
+	// Fun Handlers
+	mux.HandleFunc("GET /api/trivia", handlerTrivia)
+
+	/*
+		Routes to Build:
+		Story Builder
+		SoundEffect->Voice Channel
+		Random Image Generator
+	*/
+
+	//Subrouter
+	v1 := http.NewServeMux()
+	v1.Handle("/v1/", http.StripPrefix("/v1", mux))
 
 	server := &http.Server{
 		Addr:    ":" + portString,

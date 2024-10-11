@@ -1,32 +1,22 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/IsahiRea/discord-bot/backend/internal/auth"
 	"github.com/IsahiRea/discord-bot/backend/internal/database"
+	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.Context, userID uuid.UUID) bool {
 
-	type parameters struct {
-		DiscordID int64  `json:"discord_id"`
-		ClientID  string `json:"client_id"`
-	}
-
-	params := parameters{}
-	user, err := cfg.DB.GetUser(r.Context(), params.DiscordID)
+	refreshToken, err := cfg.DB.GetRefreshToken(context, userID)
 	if err != nil {
-		respondWithError(w, 404, fmt.Sprintf("Couldn't get user: %v", err))
-		return
-	}
-
-	refreshToken, err := cfg.DB.GetRefreshToken(r.Context(), user.ID)
-	if err != nil {
-		respondWithError(w, 404, fmt.Sprintf("Couldn't get refresh token: %v", err))
-		return
+		return false
 	}
 
 	if !time.Now().After(refreshToken.ExpiresAt) || !refreshToken.RevokedAt.Valid {
@@ -38,11 +28,43 @@ func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		respondWithJSON(w, 200, sendBack)
+	}
+
+	return true
+}
+
+func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+
+	type parameters struct {
+		DiscordID string `json:"discord_id"`
+		ClientID  string `json:"client_id"`
+	}
+
+	params := parameters{}
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
 		return
 	}
 
 	if cfg.ClientID != params.ClientID {
 		respondWithError(w, 403, "Unauthorized access to login")
+		return
+	}
+
+	id, err := parseDiscordID(params.DiscordID)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Invalid ID: %v", err))
+		return
+	}
+
+	user, err := cfg.DB.GetUser(r.Context(), id)
+	if err != nil {
+		respondWithError(w, 404, fmt.Sprintf("Couldn't get user: %v", err))
+		return
+	}
+
+	tokenExists := cfg.checkRefreshToken(w, r.Context(), user.ID)
+	if tokenExists {
 		return
 	}
 

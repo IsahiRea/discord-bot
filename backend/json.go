@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
@@ -33,4 +34,14 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(data)
+}
+
+func parseDiscordID(discordID string) (int64, error) {
+
+	id, err := strconv.ParseInt(discordID, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }

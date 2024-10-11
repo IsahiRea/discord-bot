@@ -1,31 +1,36 @@
+const axios = require('axios');
 require("dotenv").config()
 
 // Function to generate access and refresh tokens
 async function authenticateBot(discordID) {
     try {
-        const response = await axios.post('http://localhost:8080/login', {
+        const response = await axios.post('http://localhost:3000/api/login', {
             discord_id: discordID,
             client_id: process.env.clientID,
         });
 
-        refreshToken = response.data.refresh_token;
+        const authData = response.data;
+        const refreshToken = authData.refresh_token;
         console.log('Refresh Token:', refreshToken);
+        return refreshToken;
     } catch (error) {
         console.error('Failed to authenticate the bot:', error);
     }
-
-    return refreshToken;
 }
 
 // Function to refresh the access token using the refresh token
 async function refreshAccessToken(refreshToken) {
     try {
-        const response = await axios.post('http://localhost:8080/refresh', {
-            refreshToken: refreshToken
+        const response = await axios.get('http://localhost:3000/api/refresh', {
+            headers:{
+                'Authorization': `Bearer ${refreshToken}`
+            }
         });
 
-        accessToken = response.data.access_token;
+        const authData = response.data;
+        const accessToken = authData.access_token;
         console.log('New Access Token:', accessToken);
+        return accessToken;
     } catch (error) {
         console.error('Failed to refresh access token:', error);
         // TODO Handle re-authentication if refresh token is invalid or expired

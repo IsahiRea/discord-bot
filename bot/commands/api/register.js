@@ -12,14 +12,14 @@ module.exports = {
 
         try {
             // Call Go backend to create a new user
-            const response = await axios.post('http://localhost:8080/v1/api/users', {
+            const response = await axios.post('http://localhost:3000/api/users', {
                 discord_user_id: userId,
             });
 
             if (response.status === 201) {
                 await interaction.reply(`User ${username} registered successfully!`);
             } else {
-                await interaction.reply(`Could not register user.`);
+                await interaction.reply(`User already registered.`);
             }
         } catch (error) {
             console.error(error);
