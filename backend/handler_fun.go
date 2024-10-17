@@ -43,7 +43,7 @@ func handlerTrivia(w http.ResponseWriter, r *http.Request) {
 	sendBack := struct {
 		Question         string   `json:"question"`
 		CorrectAnswer    string   `json:"correct_answer"`
-		IncorrectAnswers []string `json:"incorrect answer"`
+		IncorrectAnswers []string `json:"incorrect_answers"`
 	}{
 		trivia[0].Question.Text,
 		trivia[0].CorrectAnswer,
