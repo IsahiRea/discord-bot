@@ -33,7 +33,6 @@ async function refreshAccessToken(refreshToken) {
         return accessToken;
     } catch (error) {
         console.error('Failed to refresh access token:', error);
-        // TODO Handle re-authentication if refresh token is invalid or expired
     }
 
     return accessToken;

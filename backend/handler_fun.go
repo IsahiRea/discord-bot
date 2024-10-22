@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/IsahiRea/discord-bot/backend/internal/database"
 )
 
 func handlerTrivia(w http.ResponseWriter, r *http.Request) {
@@ -52,4 +54,32 @@ func handlerTrivia(w http.ResponseWriter, r *http.Request) {
 
 	respondWithJSON(w, 200, sendBack)
 
+}
+
+func (cfg *apiConfig) handlerStory(w http.ResponseWriter, r *http.Request, user database.User) {
+	type parameters struct {
+		Message string `json:"message"`
+	}
+
+	params := parameters{}
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		respondWithError(w, 400, "Couldn't decode parameters")
+		return
+	}
+
+	// TODO Create a new table for stories
+}
+
+func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request, user database.User) {
+	type parameters struct {
+		Message string `json:"message"`
+	}
+
+	params := parameters{}
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		respondWithError(w, 400, "Couldn't decode parameters")
+		return
+	}
+
+	// TODO Use a 3rd party software to generate the images.
 }

@@ -80,13 +80,13 @@ func main() {
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUser)
 
 	// Fun Handlers
-	mux.HandleFunc("GET /api/trivia", handlerTrivia)
+	mux.HandleFunc("GET /api/trivias", handlerTrivia)
+	mux.HandleFunc("POST /api/stories", apiCfg.middlewareAuth(apiCfg.handlerStory))
+	mux.HandleFunc("POST /api/images", apiCfg.middlewareAuth(apiCfg.handlerGenImage))
 
 	/*
 		Routes to Build:
-		Story Builder
 		SoundEffect->Voice Channel
-		Random Image Generator
 	*/
 
 	//Subrouter

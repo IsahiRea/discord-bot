@@ -28,10 +28,9 @@ module.exports = {
             await interaction.reply(`UserID: ${userData.DiscordUserID}`);
         } catch (error) {
 
-            // TODO Catch the expired access token
-
+            // Catch the expired access token
             console.error(error);
-            await interaction.reply('Could not fetch user data.');
+            await interaction.reply('Could not fetch user data. Please try again');
         }
     },
 };
