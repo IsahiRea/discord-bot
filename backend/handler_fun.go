@@ -68,6 +68,11 @@ func (cfg *apiConfig) handlerStory(w http.ResponseWriter, r *http.Request, user 
 	}
 
 	// TODO Create a new table for stories
+	/*
+		sendback = struct{
+			Story string `json:"story"`
+		}
+	*/
 }
 
 func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request, user database.User) {
@@ -82,4 +87,10 @@ func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request, us
 	}
 
 	// TODO Use a 3rd party software to generate the images.
+	// TODO Create a new table for stories
+	/*
+		sendback = struct{
+			Image string `json:"image"`
+		}
+	*/
 }

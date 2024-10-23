@@ -19,7 +19,7 @@ module.exports = {
     async execute(interaction) {
 
         try {
-            const response = await axios.get('http://localhost:3000/api/trivia')
+            const response = await axios.get('http://localhost:3000/api/trivias')
             const triviaData = response.data
 
             let combinedList = [...triviaData.incorrect_answers, triviaData.correct_answer];
