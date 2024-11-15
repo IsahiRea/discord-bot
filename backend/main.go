@@ -82,7 +82,7 @@ func main() {
 	// Fun Handlers
 	mux.HandleFunc("GET /api/trivias", handlerTrivia)
 	mux.HandleFunc("POST /api/stories", apiCfg.middlewareAuth(apiCfg.handlerStory))
-	mux.HandleFunc("POST /api/images", apiCfg.middlewareAuth(apiCfg.handlerGenImage))
+	mux.HandleFunc("POST /api/images", apiCfg.handlerGenImage)
 
 	/*
 		Routes to Build:

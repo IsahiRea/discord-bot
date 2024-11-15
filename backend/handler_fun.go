@@ -3,17 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/IsahiRea/discord-bot/backend/internal/database"
 )
 
 func handlerTrivia(w http.ResponseWriter, r *http.Request) {
-	/*
-		Every user should have a different daily question
-		Fetch from en external api
-		serve the json back to the discord bot
-	*/
 
 	type triviaMsg struct {
 		Category   string   `json:"category"`
@@ -75,7 +71,8 @@ func (cfg *apiConfig) handlerStory(w http.ResponseWriter, r *http.Request, user 
 	*/
 }
 
-func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request, user database.User) {
+func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request) {
+
 	type parameters struct {
 		Message string `json:"message"`
 	}
@@ -86,11 +83,19 @@ func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request, us
 		return
 	}
 
-	// TODO Use a 3rd party software to generate the images.
-	// TODO Create a new table for stories
-	/*
-		sendback = struct{
-			Image string `json:"image"`
-		}
-	*/
+	resp, err := http.Get("https://pollinations.ai/p/" + params.Message)
+	if err != nil {
+		respondWithError(w, resp.StatusCode, "Couldn't Generate Image")
+		return
+	}
+	defer resp.Body.Close()
+
+	w.Header().Set("Content-Type", resp.Header.Get("Content-Type"))
+
+	// Stream the image data directly to the client
+	if _, err := io.Copy(w, resp.Body); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error sending image")
+		return
+	}
+
 }

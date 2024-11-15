@@ -12,6 +12,11 @@ import (
 	"github.com/google/uuid"
 )
 
+/*
+TODO: Refactor Code
+  - creating a model in models.go to simplify sendback
+  - Find unnecessary code
+*/
 func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.Context, userID uuid.UUID) bool {
 
 	refreshToken, err := cfg.DB.GetRefreshToken(context, userID)
@@ -20,7 +25,6 @@ func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.C
 	}
 
 	if !time.Now().After(refreshToken.ExpiresAt) || !refreshToken.RevokedAt.Valid {
-		//TODO: Refactor this
 		sendBack := struct {
 			RefreshToken string `json:"refresh_token"`
 		}{
