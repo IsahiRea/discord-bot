@@ -51,6 +51,8 @@ This is a Discord bot with a custom backend built using Go and a frontend utiliz
 
 ### Fun Commands
 - `GET /api/trivia`: Get a random trivia question.
+- `POST /api/stories`: Add on to created story
+- `POST /api/images`: Generate requested image
 
 ---
 
