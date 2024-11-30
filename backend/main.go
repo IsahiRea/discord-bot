@@ -84,9 +84,13 @@ func main() {
 	mux.HandleFunc("POST /api/stories", apiCfg.middlewareAuth(apiCfg.handlerStory))
 	mux.HandleFunc("POST /api/images", apiCfg.handlerGenImage)
 
+	// Points Handlers
+	mux.HandleFunc("POST /api/points", apiCfg.handlerShowPoints)
+
 	/*
 		Routes to Build:
 		SoundEffect->Voice Channel
+		Create a points system
 	*/
 
 	//Subrouter
