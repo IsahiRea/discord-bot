@@ -14,7 +14,6 @@ import (
 
 /*
 TODO: Refactor Code
-  - creating a model in models.go to simplify sendback
   - Find unnecessary code
 */
 func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.Context, userID uuid.UUID) bool {
@@ -25,26 +24,40 @@ func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.C
 	}
 
 	if !time.Now().After(refreshToken.ExpiresAt) || !refreshToken.RevokedAt.Valid {
-		sendBack := struct {
-			RefreshToken string `json:"refresh_token"`
-		}{
-			refreshToken.Token,
-		}
 
+		sendBack := RefreshToken{
+			Token: refreshToken.Token,
+		}
 		respondWithJSON(w, 200, sendBack)
 	}
 
 	return true
 }
 
-func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
-
-	type parameters struct {
-		DiscordID string `json:"discord_id"`
-		ClientID  string `json:"client_id"`
+func (cfg *apiConfig) checkUser(w http.ResponseWriter, r *http.Request, params TokenParams) database.User {
+	if cfg.ClientID != params.ClientID {
+		respondWithError(w, 403, "Unauthorized access to login")
+		return database.User{}
 	}
 
-	params := parameters{}
+	id, err := parseDiscordID(params.DiscordID)
+	if err != nil {
+		respondWithError(w, 400, fmt.Sprintf("Invalid ID: %v", err))
+		return database.User{}
+	}
+
+	user, err := cfg.DB.GetUser(r.Context(), id)
+	if err != nil {
+		respondWithError(w, 404, fmt.Sprintf("Couldn't get user: %v", err))
+		return database.User{}
+	}
+
+	return user
+}
+
+func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
+
+	params := TokenParams{}
 	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
 		respondWithError(w, 400, fmt.Sprintf("Error parsing JSON: %v", err))
 		return
@@ -79,6 +92,7 @@ func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Store Token into Database
 	err = cfg.DB.CreateRefeshToken(r.Context(), database.CreateRefeshTokenParams{
 		Token:     newRefreshToken,
 		UserID:    user.ID,
@@ -89,10 +103,8 @@ func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendBack := struct {
-		RefreshToken string `json:"refresh_token"`
-	}{
-		newRefreshToken,
+	sendBack := RefreshToken{
+		Token: newRefreshToken,
 	}
 
 	respondWithJSON(w, 200, sendBack)
@@ -132,10 +144,8 @@ func (cfg *apiConfig) HandlerRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendBack := struct {
-		Token string `json:"access_token"`
-	}{
-		newAccessToken,
+	sendBack := AccessToken{
+		Token: newAccessToken,
 	}
 
 	respondWithJSON(w, 200, sendBack)
