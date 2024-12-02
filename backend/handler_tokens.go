@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,19 +8,9 @@ import (
 
 	"github.com/IsahiRea/discord-bot/backend/internal/auth"
 	"github.com/IsahiRea/discord-bot/backend/internal/database"
-	"github.com/google/uuid"
 )
 
-/*
-TODO: Refactor Code
-  - Find unnecessary code
-*/
-func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.Context, userID uuid.UUID) bool {
-
-	refreshToken, err := cfg.DB.GetRefreshToken(context, userID)
-	if err != nil {
-		return false
-	}
+func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, refreshToken database.RefreshToken) bool {
 
 	if !time.Now().After(refreshToken.ExpiresAt) || !refreshToken.RevokedAt.Valid {
 
@@ -29,30 +18,31 @@ func (cfg *apiConfig) checkRefreshToken(w http.ResponseWriter, context context.C
 			Token: refreshToken.Token,
 		}
 		respondWithJSON(w, 200, sendBack)
+		return true
 	}
 
-	return true
+	return false
 }
 
-func (cfg *apiConfig) checkUser(w http.ResponseWriter, r *http.Request, params TokenParams) database.User {
+func (cfg *apiConfig) checkUser(w http.ResponseWriter, r *http.Request, params TokenParams) (user database.User, ok bool) {
 	if cfg.ClientID != params.ClientID {
 		respondWithError(w, 403, "Unauthorized access to login")
-		return database.User{}
+		return database.User{}, false
 	}
 
 	id, err := parseDiscordID(params.DiscordID)
 	if err != nil {
 		respondWithError(w, 400, fmt.Sprintf("Invalid ID: %v", err))
-		return database.User{}
+		return database.User{}, false
 	}
 
-	user, err := cfg.DB.GetUser(r.Context(), id)
+	user, err = cfg.DB.GetUser(r.Context(), id)
 	if err != nil {
 		respondWithError(w, 404, fmt.Sprintf("Couldn't get user: %v", err))
-		return database.User{}
+		return database.User{}, false
 	}
 
-	return user
+	return user, true
 }
 
 func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
@@ -63,24 +53,18 @@ func (cfg *apiConfig) HandlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if cfg.ClientID != params.ClientID {
-		respondWithError(w, 403, "Unauthorized access to login")
+	user, ok := cfg.checkUser(w, r, params)
+	if !ok {
 		return
 	}
 
-	id, err := parseDiscordID(params.DiscordID)
+	refreshToken, err := cfg.DB.GetRefreshToken(r.Context(), user.ID)
 	if err != nil {
-		respondWithError(w, 400, fmt.Sprintf("Invalid ID: %v", err))
+		respondWithError(w, 500, fmt.Sprintf("Error finding Refresh Token: %v", err))
 		return
 	}
 
-	user, err := cfg.DB.GetUser(r.Context(), id)
-	if err != nil {
-		respondWithError(w, 404, fmt.Sprintf("Couldn't get user: %v", err))
-		return
-	}
-
-	tokenExists := cfg.checkRefreshToken(w, r.Context(), user.ID)
+	tokenExists := cfg.checkRefreshToken(w, refreshToken)
 	if tokenExists {
 		return
 	}
@@ -125,8 +109,8 @@ func (cfg *apiConfig) HandlerRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Now().After(refreshTokenDB.ExpiresAt) || refreshTokenDB.RevokedAt.Valid {
-		respondWithError(w, 401, fmt.Sprintf("Error finding Refresh Token: %v", err))
+	tokenExists := cfg.checkRefreshToken(w, refreshTokenDB)
+	if tokenExists {
 		return
 	}
 
