@@ -99,3 +99,18 @@ func (cfg *apiConfig) handlerGenImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+// TODO: Play requested music
+func (cfg *apiConfig) handlerSound(w http.ResponseWriter, r *http.Request) {
+
+	type parameters struct {
+		Query string `json:"query"`
+	}
+
+	params := parameters{}
+	if err := json.NewDecoder(r.Body).Decode(&params); err != nil {
+		respondWithError(w, 400, "Couldn't decode parameters")
+		return
+	}
+
+}

@@ -83,6 +83,7 @@ func main() {
 	mux.HandleFunc("GET /api/trivias", handlerTrivia)
 	mux.HandleFunc("POST /api/stories", apiCfg.middlewareAuth(apiCfg.handlerStory))
 	mux.HandleFunc("POST /api/images", apiCfg.handlerGenImage)
+	mux.HandleFunc("POST /api/sound", apiCfg.handlerSound)
 
 	// Points Handlers
 	mux.HandleFunc("POST /api/points", apiCfg.handlerShowPoints)
